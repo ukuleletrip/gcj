@@ -2,71 +2,44 @@
 # -*- coding:utf-8 -*-
 import sys
 
-sys.setrecursionlimit(1100)
-#sys.maxint
-#-sys.maxint-1
+def can_put_model(stage, r, c, model):
+    # check row
+    out = 0
+    if model != '+':
+        for i in range(len(stage[r])):
+            if i == c:
+                continue
+            if stage[r][i] == 'x' or stage[r][i] == 'o':
+                return False
+        for i in range(len(stage)):
+            if i == r:
+                continue
+            if stage[i][c] == 'x' or stage[i][c] == 'o':
+                return False
 
+    # check diagonals
+    if model != 'x':
+        r_ = r - min(r, len(stage[0])-1-c)
+        c_ = c + min(r, len(stage[0])-1-c)
+        while r_ < len(stage) and c_ >= 0:
+            if r_ == r and c_ == c:
+                pass
+            elif stage[r_][c_] == '+' or stage[r_][c_] == 'o':
+                return False
+            r_ += 1
+            c_ -= 1
 
-
-def get_row(stage, r):
-    return stage[r]
-
-def get_column(stage, c):
-    column = []
-    for row in stage:
-        column.append(row[c])
-    return column
-
-def get_diagonals(stage, r_, c_):
-    # right upper to left down
-    l_line = []
-    r = r_ - min(r_, len(stage[0])-1-c_)
-    c = c_ + min(r_, len(stage[0])-1-c_)
-    while r < len(stage) and c >= 0:
-        l_line.append(stage[r][c])
-        r += 1
-        c -= 1
-
-    # left upper to right down
-    r_line = []
-    r = r_ - min(r_, c_)
-    c = c_ - min(r_, c_)
-    while r < len(stage) and c < len(stage[0]):
-        r_line.append(stage[r][c])
-        r += 1
-        c += 1
-
-    return (l_line, r_line)
-
-def is_at_least_one_of_two(line, legal_model):
-    num_blanks = line.count('.')
-    num_models = len(line)-num_blanks
-    if num_models < 2:
-        return True
-
-    num_legal_models = line.count(legal_model)
-    return (num_models-num_legal_models <= 1)
-
-
-def is_legal_model(stage, r, c):
-    # check the row
-    row = get_row(stage, r)
-    if not is_at_least_one_of_two(row, '+'):
-        return False
-
-    # check the column
-    column = get_column(stage, c)
-    if not is_at_least_one_of_two(column, '+'):
-        return False
-
-    # check the diagonals
-    diagonals = get_diagonals(stage, r, c)
-    for d in diagonals:
-        if not is_at_least_one_of_two(d, 'x'):
-            return False
-
+        r_ = r - min(r, c)
+        c_ = c - min(r, c)
+        while r_ < len(stage) and c_ < len(stage[0]):
+            if r_ == r and c_ == c:
+                pass
+            elif stage[r_][c_] == '+' or stage[r_][c_] == 'o':
+                return False
+            r_ += 1
+            c_ += 1
+        
     return True
-
 
 def calc_style_points(stage):
     points = 0
@@ -86,32 +59,24 @@ def solve(N, models):
     # try o
     for r in range(len(stage)):
         for c in range(len(stage[r])):
-            org = stage[r][c]
-            if org == 'o':
+            if stage[r][c] == 'o':
                 continue
-            stage[r][c] = 'o'
-            if is_legal_model(stage, r, c):
+            if can_put_model(stage, r, c, 'o'):
+                stage[r][c] = 'o'
                 ops.append('o %d %d' % (r+1, c+1))
-            else:
-                stage[r][c] = org
 
     # try + or x
     for r in range(len(stage)):
         for c in range(len(stage[r])):
-            org = stage[r][c]
-            if org != '.':
+            if stage[r][c] != '.':
                 continue
-            stage[r][c] = 'x'
-            if is_legal_model(stage, r, c):
+            if can_put_model(stage, r, c, 'x'):
+                stage[r][c] = 'x'
                 ops.append('x %d %d' % (r+1, c+1))
                 continue
-            else:
+            if can_put_model(stage, r, c, '+'):
                 stage[r][c] = '+'
-                if is_legal_model(stage, r, c):
-                    ops.append('+ %d %d' % (r+1, c+1))
-                    continue
-                else:
-                    stage[r][c] = org
+                ops.append('+ %d %d' % (r+1, c+1))
 
     return (calc_style_points(stage), ops)
             
