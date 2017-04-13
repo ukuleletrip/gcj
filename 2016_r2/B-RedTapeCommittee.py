@@ -1,55 +1,40 @@
 #! /usr/bin/env python
 # -*- coding:utf-8 -*-
 import sys
-import copy
 
-def get_probability(num_no, num_yes, members):
-    yp = 1.0
-    np = 1.0
-    for i in range(num_no):
-        yp *= (1-members[i])
-        np *= members[i]
-    for i in range(num_yes):
-        yp *= members[len(members)-1-i]
-        np *= (1-members[len(members)-1-i])
-    return yp+np
+def test_bitcount_bf(a, k):
+    for i in range(1<<len(a)):
+        sel = []
+        for j in range(len(a)):
+            if (i>>j)&1:
+                sel.append(a[j])
+        if len(sel) != k:
+            continue
+        print sel
 
-
-def calcit(i, n_yes, committees, yp, np):
-    if len(committees)-i < n_yes:
-        return 0
+dp = None
+def calcit(i, n_yes, committees):
     if i == len(committees):
-        return yp+np if n_yes == 0 else 0.0
+        return 1.0 if n_yes == 0 else 0.0
 
-    p1 = calcit(i+1, n_yes, committees, yp*(1-committees[i]), np*committees[i])
-    if n_yes == 0:
-        p2 = 0
-    else:
-        p2 = calcit(i+1, n_yes-1, committees, yp*committees[i], np*(1-committees[i]))
-    return p1+p2
+    global dp
+    if dp and dp[i][n_yes] >= 0:
+        return dp[i][n_yes]
 
-def get_probability_list(committees):
-    if len(committees) == 0:
-        return 0
-    p1 = 1.0
-    p2 = 1.0
-    for i in range(len(committees)):
-        if i < len(committees)/2:
-            p1 *= (1-committees[i])
-            p2 *= (committees[i])
-        else:
-            p1 *= committees[i]
-            p2 *= (1-committees[i])
-    return p1+p2
+    p = calcit(i+1, n_yes, committees)*committees[i]
+    if n_yes != 0:
+        p += calcit(i+1, n_yes-1, committees)*(1-committees[i])
 
-kuso = 0
+    dp[i][n_yes] = p
+    return p
+
 def doit(i, k, members, committees):
     if len(members)-i < k:
         # cut branch
         return 0
     if i == len(members) or k == 0:
         if k == 0:
-            rv = calcit(0, len(committees)/2, committees, 1.0, 1.0)/2
+            rv = calcit(0, len(committees)/2, committees)
             return rv
         else:
             return 0.0
@@ -60,17 +45,30 @@ def doit(i, k, members, committees):
     committees.pop()
     return max(p1, p2)
 
-
 def bf_solve(K, members):
     ans = doit(0, K, members, [])
     return ans
 
+def get_probability(n, K, members):
+    committees = []
+    for i in range(n):
+        committees.append(members[i])
+
+    for i in range(K-n):
+        committees.append(members[len(members)-1-((K-n)-1-i)])
+
+    global dp
+    dp = []
+    for i in range(len(committees)):
+        dp.append([-1]*len(committees))
+
+    return calcit(0, len(committees)/2, committees)
 
 def solve(K, members):
     maxp = 0
-    for i in range(1, K):
+    for i in range(K+1):
         # i is number of 'NO' person
-        p = get_probability(i, K-i, members)
+        p = get_probability(i, K, members)
         if p > maxp:
             maxp = p
     return maxp
@@ -83,7 +81,8 @@ if __name__ == '__main__':
         (N, K) = map(int, f.readline().rstrip().split())
         members = map(float, f.readline().rstrip().split())
 
-        answer = bf_solve(K, sorted(members))
+        answer = solve(K, sorted(members))
+        #answer = bf_solve(K, sorted(members))
 
         print "Case #%d: %f" % (i+1, answer)
 
