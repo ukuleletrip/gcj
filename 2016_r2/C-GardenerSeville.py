@@ -4,7 +4,7 @@ import sys
 
 class Node(object):
     def __init__(self, hedge_i):
-        self.hedge_i = i
+        self.hedge_i = hedge_i
         self.left = None
         self.top = None
         self.right = None
@@ -20,39 +20,38 @@ class Node(object):
         if self.bottom == fm:
             return self.right if hedges[self.hedge_i] == '/' else self.left
 
-        print self.hedge_i, fm, '\n', self.left, self.top, self.right, self.bottom
         return None
 
 def create_garden(R, C):
-    nodes = [[Node(j*R+i) for i in range(C)] for j in range(R)]
+    nodes = [[Node(j*C+i) for i in range(C)] for j in range(R)]
 
     for i in range(R):
         for j in range(C):
             node = nodes[i][j]
             node.left = nodes[i][j-1] if j>0 else R*2+C+(C-i)
-            node.right = nodes[i][j+1] if j<C-1 else R+i+1
+            node.right = nodes[i][j+1] if j<C-1 else C+i+1
             node.top = nodes[i-1][j] if i>0 else j+1
-            node.bottom = nodes[i+1][j] if i<R-1 else R+C+(R-j)
-            print '*', node.left, node.right, node.top, node.bottom
+            node.bottom = nodes[i+1][j] if i<R-1 else R+C+(C-j)
 
     return nodes
 
 def is_connected(garden, hedges, c1, c2):
-    if c1 <= R:
-        node = garden[0][c1-1]
-    elif c1 <= R+C:
-        node = garden[c1-C-1][C-1]
-    elif c1 <= R*2+C:
-        node = garden[R-1][C-(c1-(R+C))]
+    n1 = c1
+    if c1 <= C:
+        n2 = garden[0][c1-1]
+    elif c1 <= C+R:
+        n2 = garden[c1-C-1][C-1]
+    elif c1 <= C*2+R:
+        n2 = garden[R-1][C-(c1-(R+C))]
     else:
-        node = garden[R-(c1-(R*2+C))][0]
-    fm = c1
+        n2 = garden[R-(c1-(C*2+R))][0]
 
     while True:
-        node = node.next(fm, hedges)
-        if type(node) == int:
-            return node == c2
-        fm = node
+        n3 = n2.next(n1, hedges)
+        if type(n3) == int:
+            return n3 == c2
+        n1 = n2
+        n2 = n3
 
 
 def solve(R, C, courties):
@@ -74,20 +73,9 @@ def solve(R, C, courties):
 
     return None
 
-def print_garden(garden):
-    for r in garden:
-        print ''.join(r)
-
-def is_lover(courties, a, b):
-    idx_a = courties.index(a)
-    idx_b = courties.index(b)
-    return (idx_a&~0x1) == (idx_b&~0x1)
-
-def set_hedge(garden, hedge, r, c):
-    if garden[r][c] != '.' and garden[r][c] != hedge:
-        return False
-    garden[r][c] = hedge
-    return True
+def print_garden(hedges, R, C):
+    for i in range(R):
+        print ''.join(hedges[i*C:(i+1)*C])
 
 if __name__ == '__main__':
     f = open(sys.argv[1])
@@ -97,13 +85,13 @@ if __name__ == '__main__':
         (R, C) = map(int, f.readline().rstrip().split())
         courtiers = map(int, f.readline().rstrip().split())
 
-        garden = solve(R, C, courtiers)
+        hedges = solve(R, C, courtiers)
 
         print "Case #%d:" % (i+1)
-        if garden is None:
+        if hedges is None:
             print 'IMPOSSIBLE'
         else:
-            print_garden(garden)
+            print_garden(hedges, R, C)
 
 # sort by key
 # for k,v in sorted(d.items())
