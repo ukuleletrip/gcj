@@ -1,5 +1,5 @@
 # gcj
-*.in
+#*.in
 *.out
 
 
