@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # -*- coding:utf-8 -*-
 import sys
+import math
 
 sys.setrecursionlimit(1100)
 #sys.maxint
@@ -25,24 +26,26 @@ def dfs(graph, used, frm, to, f):
                 return d
     return 0
 
+def is_crossed(n1, n2):
+    if len(n1) == 0 or len(n2) == 0:
+        return False
+    if n1[0] > n2[1] or n2[0] > n1[1]:
+        return False
+    return True
+
 def solve(N, P, recipe, ingredients):
-    kittbl = [] # key is number of serving, value is index of package
-    ingtbl = [] # array of number of serving, orderd in index of package
+    ingtbl = [] # array of (min, max) serving, orderd in index of package
 
     for i in range(N):
-        kittbl.append({})
         ingtbl.append([])
         for j in range(P):
-            ingredient = ingredients[i][j]
-            n = ingredient/recipe[i]
-            ingtbl[i].append([])
-            for k in range(max(0, n-1), n+1+1):
-                if ingredient >= k*recipe[i]*0.9 and ingredient <= k*recipe[i]*1.1:
-                    ingtbl[i][j].append(k)
-                    if k in kittbl[i]:
-                        kittbl[i][k].append(j)
-                    else:
-                        kittbl[i][k] = [j]
+            g = ingredients[i][j]*100.0
+            min_n = int(math.ceil(g/(recipe[i]*110)))
+            max_n = int(math.floor(g/(recipe[i]*90)))
+            if min_n <= max_n:
+                ingtbl[i].append((min_n, max_n))
+            else:
+                ingtbl[i].append(())
 
     # create graph
     graph = [[0 for j in range(N*P+2)] for i in range(N*P+2)] # +2 means s, t
@@ -58,11 +61,9 @@ def solve(N, P, recipe, ingredients):
                     graph[1+i*P+j][N*P+1] = 1
                 continue
 
-            for n in ingtbl[i][j]:
-                if n in kittbl[i+1]:
-                    for k in kittbl[i+1][n]:
-                        # link the node
-                        graph[1+i*P+j][1+(i+1)*P+k] = 1
+            for n in range(len(ingtbl[i+1])):
+                if is_crossed(ingtbl[i+1][n], ingtbl[i][j]):
+                    graph[1+i*P+j][1+(i+1)*P+n] = 1
             
     #print_graph(graph)
     answer = 0
