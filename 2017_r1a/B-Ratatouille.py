@@ -7,30 +7,73 @@ sys.setrecursionlimit(1100)
 #-sys.maxint-1
 
 
+def print_graph(graph):
+    for i in range(len(graph)):
+        print graph[i]
+
+def dfs(graph, used, frm, to, f):
+    if frm == to:
+        # goal
+        return f
+    used[frm] = True
+    for i in range(len(graph[frm])):
+        if not used[i] and graph[frm][i] > 0:
+            d = dfs(graph, used, i, to, min(f, graph[frm][i]))
+            if d:
+                graph[frm][i] -= d
+                graph[i][frm] += d
+                return d
+    return 0
+
 def solve(N, P, recipe, ingredients):
-    kittbl = []
-    ingtbl = []
+    kittbl = [] # key is number of serving, value is index of package
+    ingtbl = [] # array of number of serving, orderd in index of package
+
     for i in range(N):
         kittbl.append({})
-        ingtbl.append({})
-        for ingredient in ingredients[i]:
+        ingtbl.append([])
+        for j in range(P):
+            ingredient = ingredients[i][j]
             n = ingredient/recipe[i]
-            ingtbl[i][ingredient] = []
+            ingtbl[i].append([])
             for k in range(max(0, n-1), n+1+1):
                 if ingredient >= k*recipe[i]*0.9 and ingredient <= k*recipe[i]*1.1:
-                    ingtbl[i][ingredient].append(k)
+                    ingtbl[i][j].append(k)
                     if k in kittbl[i]:
-                        kittbl[i][k].append(ingredient)
+                        kittbl[i][k].append(j)
                     else:
-                        kittbl[i][k] = [ingredient]
+                        kittbl[i][k] = [j]
 
+    # create graph
+    graph = [[0 for j in range(N*P+2)] for i in range(N*P+2)] # +2 means s, t
     for i in range(N):
-        for ingredient in ingtbl[i]:
-            if len(ingtbl[i][ingredient]) == 1:
-                # it must used
-                n = ingtbl[i][ingredient][0]
+        for j in range(P):
+            if i == 0:
+                # link from s for 1st ingredient
+                if len(ingtbl[i][j]):
+                    graph[i][1+j] = 1
+            if i == N-1:
+                # link to t for last ingredient
+                if len(ingtbl[i][j]):
+                    graph[1+i*P+j][N*P+1] = 1
+                continue
 
-    return 0
+            for n in ingtbl[i][j]:
+                if n in kittbl[i+1]:
+                    for k in kittbl[i+1][n]:
+                        # link the node
+                        graph[1+i*P+j][1+(i+1)*P+k] = 1
+            
+    #print_graph(graph)
+    answer = 0
+    while True:
+        used = [False]*(N*P+2)
+        f = dfs(graph, used, 0, N*P+1, sys.maxint)
+        if f == 0:
+            break
+        answer += f
+
+    return answer
 
 if __name__ == '__main__':
     f = open(sys.argv[1])
