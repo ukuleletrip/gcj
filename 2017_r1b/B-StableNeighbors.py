@@ -79,7 +79,7 @@ def solve(N, R, O, Y, G, B, V):
                 answer.insert(i, c)
                 break
         else:
-            return 'IMPOSSIBLE4'
+            return 'IMPOSSIBLE'
 
     # extract consolidated string
     for c in consol:
