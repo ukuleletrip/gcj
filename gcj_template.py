@@ -31,19 +31,22 @@ def is_prime(x):
     return True
 
 if __name__ == '__main__':
-    f = open(sys.argv[1])
+    if len(sys.argv) > 1:
+        f = open(sys.argv[1])
+    else:
+        f = sys.stdin
 
     num_of_case = int(f.readline())
     for i in range(num_of_case):
         n = int(f.readline())
-        candies = map(int, f.readline().rstrip().split())
+        candies = list(map(int, f.readline().rstrip().split()))
 
-        print "Case #%d: %d" % (i+1, answer)
+        print("Case #%d: %d".format(i+1, answer), file=sys.stdout)
 
 # sort by key
 # for k,v in sorted(d.items())
 # sort by value
-# for k,v in sorted(d.items(), key=lambda x:x[1])
+# for k,v in sorted(d.items(), key=lambda x:x[1], reverse=True)
 # items() return tapple, tapple[0] is k, tapple[1] is v
 #
 # import copy
