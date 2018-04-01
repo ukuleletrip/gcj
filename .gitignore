@@ -1,6 +1,6 @@
 # gcj
 #*.in
-*.out
+*.out*
 
 
 # Byte-compiled / optimized / DLL files
